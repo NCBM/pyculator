@@ -7,6 +7,7 @@ EXPR_OPERATOR = 2
 EXPR_SUFFIX = 4
 EXPR_ENTER = 8
 EXPR_EXIT = 16
+EXPR_SEP = 32
 EXPR_UNKNOWN = 1024
 
 literal = string.ascii_lowercase + string.digits + "._"
@@ -27,6 +28,8 @@ def exprtype(c: str):
         return EXPR_ENTER
     elif c in eexit:
         return EXPR_EXIT
+    elif c == ",":
+        return EXPR_SEP
     else:
         return EXPR_UNKNOWN
 
@@ -44,7 +47,7 @@ class Parser:
     def _trail(self, expr: str, sym: str = ""):
         buf, buftype = "", EXPR_LITERAL
         for c in expr:
-            if c == " ":
+            if c == string.whitespace:
                 continue
             if not buf:
                 buf += c
