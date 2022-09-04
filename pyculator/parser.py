@@ -9,7 +9,7 @@ EXPR_ENTER = 8
 EXPR_EXIT = 16
 EXPR_UNKNOWN = 1024
 
-literal = string.ascii_lowercase + string.digits + "."
+literal = string.ascii_lowercase + string.digits + "._"
 operator = "+-*/^!=<>"
 suffix = "@%"
 enter = "([{"
@@ -44,6 +44,8 @@ class Parser:
     def _trail(self, expr: str, sym: str = ""):
         buf, buftype = "", EXPR_LITERAL
         for c in expr:
+            if c == " ":
+                continue
             if not buf:
                 buf += c
                 buftype = exprtype(c)
