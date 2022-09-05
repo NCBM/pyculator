@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Iterable, List, Tuple
 import string
 
 EXPR_LITERAL = 1
@@ -8,13 +8,35 @@ EXPR_SUFFIX = 4
 EXPR_ENTER = 8
 EXPR_EXIT = 16
 EXPR_SEP = 32
+EXPR_EQU = 64
 EXPR_UNKNOWN = 1024
 
 literal = string.ascii_lowercase + string.digits + "._"
-operator = "+-*/^!=<>"
+operator = "+-*/^!"
+equ = "=<>"
 suffix = "@%"
 enter = "([{"
 eexit = ")]}"
+expr_prio = [suffix, "^!", "*/", "+-"]
+
+
+class Stack:
+    def __init__(self) -> None:
+        self.data = []
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def top(self):
+        return self.data[-1]
+
+    @top.setter
+    def top(self, value):
+        self.data.append(value)
+
+    def pop(self):
+        return self.data.pop(-1)
 
 
 def exprtype(c: str):
@@ -30,8 +52,17 @@ def exprtype(c: str):
         return EXPR_EXIT
     elif c == ",":
         return EXPR_SEP
+    elif c in equ:
+        return EXPR_EQU
     else:
         return EXPR_UNKNOWN
+
+
+def getexprprio(c: str):
+    for i, g in enumerate(expr_prio):
+        if c in g:
+            return i
+    return -1
 
 
 @dataclass
@@ -60,3 +91,18 @@ class Parser:
                     buf, buftype = c, _etype
         if buf:
             yield buf, buftype
+
+    def _rpn(self, data: Iterable[Tuple[str, int]]):
+        oprts = Stack()
+        for s, t in data:
+            if t == EXPR_LITERAL:
+                yield s, t
+            elif t & (EXPR_OPERATOR | EXPR_SUFFIX):
+                if len(oprts) == 0 or \
+                        getexprprio(oprts.top[0]) >= getexprprio(s):
+                    oprts.top = s, t
+                else:
+                    yield s, t
+
+        while len(oprts) != 0:
+            yield oprts.pop()
