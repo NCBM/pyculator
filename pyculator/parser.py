@@ -2,15 +2,16 @@ from decimal import Decimal
 from typing import Any, Iterable, Tuple
 import string
 
-EXPR_LITERAL = 1
+EXPR_NUMBER = 1
 EXPR_OPERATOR = 2
 EXPR_EQU = 4
 EXPR_ENTER = 8
 EXPR_EXIT = 16
 EXPR_SEP = 32
+EXPR_FUNC = 64
 EXPR_UNKNOWN = 1024
 
-literal = string.ascii_lowercase + string.digits + "._@%"
+number = string.digits + "._@%"
 operator = "+-*/^!"
 equ = "=<>"
 enter = "([{"
@@ -42,8 +43,8 @@ class Stack:
 
 
 def exprtype(c: str):
-    if c in literal:
-        return EXPR_LITERAL
+    if c in number:
+        return EXPR_NUMBER
     elif c in operator:
         return EXPR_OPERATOR
     elif c in equ:
@@ -54,6 +55,8 @@ def exprtype(c: str):
         return EXPR_EXIT
     elif c == ",":
         return EXPR_SEP
+    elif c in string.ascii_letters:
+        return EXPR_FUNC
     else:
         return EXPR_UNKNOWN
 
@@ -89,7 +92,7 @@ class Parser:
         pass
 
     def _trail(self, expr: str, sym: str = ""):
-        buf, buftype = "", EXPR_LITERAL
+        buf, buftype = "", EXPR_NUMBER
         for c in expr:
             if c == string.whitespace:
                 continue
@@ -109,7 +112,7 @@ class Parser:
         oprts = Stack()
 
         for s, t in data:
-            if t & EXPR_LITERAL:
+            if t & EXPR_NUMBER:
                 yield s, t
             elif t & EXPR_OPERATOR:
                 if len(oprts) and \
